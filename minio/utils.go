@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"hash/crc32"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -77,4 +79,15 @@ func HashcodeString(s string) int {
 	}
 	// v == MinInt
 	return 0
+}
+
+func shortDur(d time.Duration) string {
+	s := d.String()
+	if strings.HasSuffix(s, "m0s") {
+		s = s[:len(s)-2]
+	}
+	if strings.HasSuffix(s, "h0m") {
+		s = s[:len(s)-2]
+	}
+	return s
 }

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/minio/minio-go/v7"
 )
 
 func TestAccMinioS3Bucket_basic(t *testing.T) {
@@ -269,9 +270,40 @@ func TestMinioS3BucketName(t *testing.T) {
 	}
 }
 
-func testAccCheckMinioS3BucketDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*S3MinioClient).S3Client
+func testAccCheckMinioS3BucketDestroy(s *terraform.State) (err error) {
 
+	err = providerMinioS3BucketDestroy(testAccProvider.Meta().(*S3MinioClient).S3Client, s)
+	if err != nil {
+		return
+	}
+
+	if testAccSecondProvider.Meta() == nil {
+		return
+	}
+
+	err = providerMinioS3BucketDestroy(testAccSecondProvider.Meta().(*S3MinioClient).S3Client, s)
+	if err != nil {
+		return
+	}
+
+	if testAccThirdProvider.Meta() == nil {
+		return
+	}
+
+	err = providerMinioS3BucketDestroy(testAccThirdProvider.Meta().(*S3MinioClient).S3Client, s)
+	if err != nil {
+		return
+	}
+
+	if testAccFourthProvider.Meta() == nil {
+		return
+	}
+
+	err = providerMinioS3BucketDestroy(testAccFourthProvider.Meta().(*S3MinioClient).S3Client, s)
+	return
+}
+
+func providerMinioS3BucketDestroy(conn *minio.Client, s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "minio_s3_bucket" {
 			continue
